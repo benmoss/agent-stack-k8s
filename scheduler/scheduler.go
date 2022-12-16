@@ -118,14 +118,6 @@ func (w *worker) k8sify(
 		Name:  "BUILDKITE_BUILD_PATH",
 		Value: "/workspace/build",
 	}, corev1.EnvVar{
-		Name: "BUILDKITE_AGENT_TOKEN",
-		ValueFrom: &corev1.EnvVarSource{
-			SecretKeyRef: &corev1.SecretKeySelector{
-				LocalObjectReference: corev1.LocalObjectReference{Name: tokenSecret},
-				Key:                  agentTokenKey,
-			},
-		},
-	}, corev1.EnvVar{
 		Name:  "BUILDKITE_AGENT_ACQUIRE_JOB",
 		Value: job.Uuid,
 	})
@@ -224,6 +216,14 @@ func (w *worker) k8sify(
 			}, {
 				Name:  "BUILDKITE_CONTAINER_COUNT",
 				Value: strconv.Itoa(containerCount),
+			}, {
+				Name: "BUILDKITE_AGENT_TOKEN",
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{Name: tokenSecret},
+						Key:                  agentTokenKey,
+					},
+				},
 			},
 		},
 	}

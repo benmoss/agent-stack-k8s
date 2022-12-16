@@ -48,8 +48,10 @@ func TestJobPluginConversion(t *testing.T) {
 	commandContainer := findContainer(t, result.Spec.Template.Spec.Containers, "container-0")
 	commandEnv := findEnv(t, commandContainer.Env, "BUILDKITE_COMMAND")
 	require.Equal(t, pluginConfig.PodSpec.Containers[0].Command[0], commandEnv.Value)
+	requireNoEnv(t, commandContainer.Env, "BUILDKITE_AGENT_TOKEN")
 
-	tokenEnv := findEnv(t, commandContainer.Env, "BUILDKITE_AGENT_TOKEN")
+	agentContainer := findContainer(t, result.Spec.Template.Spec.Containers, "agent")
+	tokenEnv := findEnv(t, agentContainer.Env, "BUILDKITE_AGENT_TOKEN")
 	require.Equal(t, "some-secret", tokenEnv.ValueFrom.SecretKeyRef.Name)
 }
 
@@ -91,4 +93,13 @@ func findEnv(t *testing.T, envs []corev1.EnvVar, name string) corev1.EnvVar {
 	require.FailNow(t, "envvar not found")
 
 	return corev1.EnvVar{}
+}
+
+func requireNoEnv(t *testing.T, envs []corev1.EnvVar, name string) {
+	t.Helper()
+	for _, env := range envs {
+		if env.Name == name {
+			t.Fatalf("env var named %q should not be present, but was found", name)
+		}
+	}
 }
