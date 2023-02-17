@@ -7,10 +7,10 @@ if [[ ${#} -lt 1 ]]; then
 fi
 
 version="${1}"
+version=$(echo $version | sed 's/^v//') # strip leading 'v'
 tag="v$version"
 
 commitish=$(git describe --exclude "$tag")
-git tag -f -m "$tag" "$tag"
 
 # helm doesn't use v-prefixed versions, everything else does
 # NB: these will fail if the commit hasn't gone through CI and produced release-candidate images yet
@@ -22,6 +22,7 @@ chart_digest=$(crane digest ghcr.io/buildkite/helm/agent-stack-k8s:${version})
 controller_digest=$(crane digest ghcr.io/buildkite/agent-stack-k8s:${tag})
 agent_digest=$(crane digest ghcr.io/buildkite/agent-k8s:${tag})
 
+git tag -m "$tag" "$tag"
 git push origin "$tag" --force
 goreleaser release --rm-dist
 gh release view "$tag" --json body -q .body >dist/body.txt
